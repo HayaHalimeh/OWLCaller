@@ -1,4 +1,12 @@
 
+
+import os
+print(os.getcwd())
+import glob
+files = glob.glob(os.path.join(os.getcwd(), '*'))
+print(files)
+
+
 import requests
 from requests.structures import CaseInsensitiveDict
 import json
@@ -7,16 +15,17 @@ from typing import List, Mapping, Union
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
-from functions.image_crawler import *
-from functions import general_functions
-from functions import image_crawler 
+
+from functions.image_utils import *
+from functions import utils
+from functions import image_utils 
+
 import glob
 from collections import defaultdict
 import collections
 
 
 class APICaller:
-
 
     def __init__(self) -> None:
         
@@ -76,7 +85,7 @@ class APICaller:
 
 
     def save_event_ids(self, event_ids_list: List[int] = None,
-                ids_output_path: str = None):
+                output_path: str = None):
         '''
         Saves the a list of event_ids to a json output file with the respective day's date
         '''
@@ -85,8 +94,8 @@ class APICaller:
         today = datetime.date.today()
         events= {'event_ids': event_ids_list}
 
-        file_out = f"{ids_output_path}/owl_ids_{str(today).replace('-', '_')}.json"
-        general_functions.save_json_file(events, file_out)
+        file_out = f"{output_path}/owl_ids_{str(today).replace('-', '_')}.json"
+        utils.save_json_file(events, file_out)
         
         print(f'Dict with {len(events["event_ids"])} event ids saved to {file_out}' )
                 
@@ -116,12 +125,12 @@ class APICaller:
             
 
     def save_events(self, event_ids: Union[List[int], int],
-                    events_output_path: str = None) :
+                    output_path: str = None) :
 
         """
-        send a request to the owl api to get information about events and saves them in events_output_path in a default dict format
+        send a request to the owl api to get information about events and saves them in output_path in a default dict format
         event_ids:  list of event ids
-        events_output_path: output path
+        output_path: output path
         """
 
         import datetime
@@ -140,8 +149,8 @@ class APICaller:
             except requests.exceptions.RequestException as e:
                 print("An error occurred during the request:", e)
 
-        file_out = f"{events_output_path}/owl_data_{str(today).replace('-', '_')}.json"
-        general_functions.save_json_file(responses, file_out)
+        file_out = f"{output_path}/owl_data_{str(today).replace('-', '_')}.json"
+        utils.save_json_file(responses, file_out)
 
         print(f'Dict with {len(responses["id"])} events saved to {file_out}' )
             
@@ -168,8 +177,9 @@ class APICaller:
 
 
 
+
     def save_images(self, event_ids: List[int] = None,
-                                    images_output_path: str = None):
+                                    output_path: str = None):
         
         url = self.url + "/GetEventItemByID/"
 
@@ -180,16 +190,14 @@ class APICaller:
                 content = resp.json()
                 if 'mainImage' in content.keys() and 'contentUrl' in content['mainImage'].keys() :
                     if content['mainImage']['contentUrl'] != None:
-                        image_crawler.request_save_image(content['mainImage']['contentUrl'], f'{images_output_path}\{content["id"]}.jpg')
+                        image_utils.request_save_image(content['mainImage']['contentUrl'], f'{output_path}\{content["id"]}.jpg')
                         count += 1
-
-
                         
             except requests.exceptions.RequestException as e:
                 print("An error occurred during the request:", e)
 
         
-        print(f"In Total {count/len(event_ids):.2f} % of Images downloaded and saved to {images_output_path}")
+        print(f"In Total {count/len(event_ids):.2f} % of Images downloaded and saved to {output_path}")
 
 
 
@@ -216,74 +224,3 @@ class APICaller:
 
 
 
-'''
-
- def get_events_and_images(self, event_ids: List[int] = None,
-                        output_path : str = None):
-        
-        """
-        send requests to the owl api to get information about events with ids stored in 'event_ids'
-        substracts the main image url, requests it and saves it in dataframe with the defined 'columns' along other 
-        events information
-        """
-
-        dataframe = pd.DataFrame()
-
-        for id in event_ids:
-            
-            event = {}
-            resp = self.get_event(id)
-            print(id, event_ids.index(id)/len(event_ids), resp.status_code)
-            
-            if resp.status_code != 200:
-                #print(resp.status_code)
-                break
-
-            else:
-                try:
-                    content =  resp.json()
-                    #for col in columns:
-                    for col in content.keys():
-
-                            if col=="mainImage" and content['mainImage']['contentUrl'] != None:
-                                event['image_id'] = content['id_str']
-
-                                img_out_path = output_path + 'images/image_' + str(content['id_str']) + '.jpg'
-                                
-                                img_url = content['mainImage']['contentUrl']
-                                
-                                image_crawler.request_save_image(img_url,img_out_path)
-                                print("image downloaded")
-
-                                event[col] = ""
-                            else:
-                                event[col] = str(content[col])
-                    #else:
-                    #    event[col] = ""
-
-                except requests.exceptions.ConnectTimeout:
-                    print("expection")
-
-                    df_data = pd.DataFrame(event, index=[0])
-                    dataframe = pd.concat([dataframe, df_data] , ignore_index=True)
-
-                    
-
-                    #file_out = f"{output_path}{output_file}"
-                    #dataframe.to_csv(file_out, index=False,)
-                    #print(f'saved to {file_out}, {len(dataframe)} events' )
-
-
-            #df_data = pd.DataFrame(event, index=[0])
-            #dataframe = pd.concat([dataframe, df_data] , ignore_index=True)
-
-        return dataframe
-         
-
-        #file_out = f"{output_path}{output_file}"
-        #dataframe.to_csv(file_out, index=False,)
-        #print(f'saved to {file_out}', {len(dataframe)} events' )
-
-        #pass
-
-'''

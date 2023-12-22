@@ -47,7 +47,6 @@ def show_image(img_path: str = None,
     """
     Takes a path to an image and display it in RGB
     """
-  
    
     import PIL
     from IPython.display import display

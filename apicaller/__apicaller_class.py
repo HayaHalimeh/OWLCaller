@@ -28,6 +28,7 @@ import collections
 class APICaller:
 
     def __init__(self) -> None:
+        super().__init__()
         
         self.headers = CaseInsensitiveDict()
         self.headers["accept"] = "application/json"
@@ -157,6 +158,9 @@ class APICaller:
 
 
     def get_images(self, event_ids: List[int] = None) -> collections.defaultdict:
+        '''
+        Gets the images of the events
+        '''
         
         url = self.url + "/GetEventItemByID/"
         responses = defaultdict(list)
@@ -180,6 +184,9 @@ class APICaller:
 
     def save_images(self, event_ids: List[int] = None,
                                     output_path: str = None):
+        '''
+        Saves the images of the events in output_path
+        '''
         
         url = self.url + "/GetEventItemByID/"
 
@@ -206,7 +213,7 @@ class APICaller:
                               output_path:str =None):
 
         '''
-        
+        saves the events in a dataframe format
         '''
         import datetime
         today = datetime.date.today()
